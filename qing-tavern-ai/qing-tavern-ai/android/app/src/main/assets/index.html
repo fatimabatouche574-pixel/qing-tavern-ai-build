@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#dff7ef" />
+  <title>青樽 QingTavern AI</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="toastHost" class="toast-host" aria-live="polite"></div>
+
+  <div class="app-shell" id="appShell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand-card">
+        <div class="brand-mark">青</div>
+        <div>
+          <h1>青樽 AI</h1>
+          <p>本地角色酒馆 · Local Tavern</p>
+        </div>
+      </div>
+
+      <div class="sidebar-actions">
+        <button class="primary" id="newCharacterBtn">新建角色</button>
+        <button id="importCardBtn">导入角色卡</button>
+        <input id="cardImportInput" type="file" multiple hidden accept=".json,.png,.webp,.yaml,.yml,.txt,.md,.card,.charx,.zip,application/json,image/png,image/webp,text/*,application/zip" />
+      </div>
+
+      <div class="section-title">角色库</div>
+      <div id="characterList" class="character-list"></div>
+    </aside>
+
+    <main class="main-panel">
+      <header class="topbar">
+        <button class="icon-button mobile-only" id="sidebarToggle" aria-label="打开角色列表">☰</button>
+        <div class="topbar-character" id="topbarCharacter"></div>
+        <div class="topbar-actions">
+          <button id="newChatBtn">新聊天</button>
+          <button id="editCharacterBtn">角色卡</button>
+          <button id="settingsBtn">设置</button>
+        </div>
+      </header>
+
+      <section class="chat-pane" id="chatPane">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-illustration">✦</div>
+          <h2>从左侧创建或导入角色卡</h2>
+          <p>支持 JSON / PNG 内嵌角色卡 / YAML / TXT / ZIP/CHARX 里的卡片文件。未知格式会进入手动映射模式。</p>
+          <button class="primary" id="emptyImportBtn">导入第一张角色卡</button>
+        </div>
+
+        <div class="chat-workspace" id="chatWorkspace" hidden>
+          <div class="chat-strip" id="chatStrip"></div>
+          <div class="messages-scroll" id="messagesScroll"></div>
+          <div class="suggestion-bar" id="suggestionBar" hidden></div>
+        </div>
+      </section>
+
+      <footer class="composer" id="composer" hidden>
+        <div class="composer-tools">
+          <button id="suggestBtn">三条推荐回复</button>
+          <button id="continueBtn">继续</button>
+          <button id="forkHereBtn">从当前位置分支</button>
+        </div>
+        <div class="composer-row">
+          <textarea id="userInput" rows="1" placeholder="输入你的回复……"></textarea>
+          <button class="send-button" id="sendBtn">发送</button>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <div class="modal" id="characterModal" hidden>
+    <div class="modal-card wide">
+      <div class="modal-header">
+        <div>
+          <h2 id="characterModalTitle">角色卡</h2>
+          <p>可编辑核心字段、头像和聊天背景。保存后不会覆盖原始导入文件。</p>
+        </div>
+        <button class="icon-button" data-close-modal="characterModal">×</button>
+      </div>
+      <div class="form-grid">
+        <label>角色名<input id="charName" type="text" /></label>
+        <label>标签<input id="charTags" type="text" placeholder="逗号分隔" /></label>
+        <label class="full">描述 / Description<textarea id="charDescription"></textarea></label>
+        <label class="full">性格 / Personality<textarea id="charPersonality"></textarea></label>
+        <label class="full">场景 / Scenario<textarea id="charScenario"></textarea></label>
+        <label class="full">开场白 / First message<textarea id="charFirstMessage"></textarea></label>
+        <label class="full">示例对话 / Example dialogue<textarea id="charExample"></textarea></label>
+        <label class="full">系统提示 / System prompt<textarea id="charSystemPrompt"></textarea></label>
+      </div>
+      <div class="asset-row">
+        <button id="avatarBtn">更换头像</button>
+        <button id="backgroundBtn">更换聊天背景</button>
+        <button id="exportCharacterBtn">导出 JSON</button>
+        <input id="avatarInput" type="file" hidden accept="image/*" />
+        <input id="backgroundInput" type="file" hidden accept="image/*" />
+      </div>
+      <div class="modal-footer">
+        <button data-close-modal="characterModal">取消</button>
+        <button class="primary" id="saveCharacterBtn">保存角色卡</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="chatModal" hidden>
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <h2>新聊天记录</h2>
+          <p>同一角色可拥有多个完全独立的聊天记录。</p>
+        </div>
+        <button class="icon-button" data-close-modal="chatModal">×</button>
+      </div>
+      <label>标题<input id="newChatTitle" type="text" placeholder="例如：雨夜旅馆线" /></label>
+      <div class="modal-footer">
+        <button data-close-modal="chatModal">取消</button>
+        <button class="primary" id="createChatBtn">创建</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="settingsModal" hidden>
+    <div class="modal-card wide">
+      <div class="modal-header">
+        <div>
+          <h2>设置</h2>
+          <p>主题、API 接口、模型参数与高级请求模板。</p>
+        </div>
+        <button class="icon-button" data-close-modal="settingsModal">×</button>
+      </div>
+
+      <div class="settings-layout">
+        <section>
+          <h3>一键主题</h3>
+          <div class="theme-grid" id="themeGrid"></div>
+        </section>
+
+        <section>
+          <h3>API 接口</h3>
+          <div class="form-grid compact">
+            <label>接口配置<select id="apiProfileSelect"></select></label>
+            <label>显示名<input id="apiName" type="text" /></label>
+            <label>类型<select id="apiType"><option value="openai">OpenAI 兼容 Chat Completions</option><option value="custom">自定义 JSON 模板</option></select></label>
+            <label>模型名<input id="apiModel" type="text" placeholder="your-model-name" /></label>
+            <label class="full">Endpoint URL<input id="apiEndpoint" type="url" placeholder="https://.../v1/chat/completions" /></label>
+            <label class="full">API Key<input id="apiKey" type="password" autocomplete="off" placeholder="保存在本机 IndexedDB" /></label>
+            <label class="full">额外 Headers（JSON，可选）<textarea id="apiHeaders" placeholder='{"HTTP-Referer":"..."}'></textarea></label>
+            <label>Temperature<input id="apiTemperature" type="number" min="0" max="2" step="0.1" /></label>
+            <label>Max tokens<input id="apiMaxTokens" type="number" min="16" step="16" /></label>
+            <label class="full">自定义请求 Body 模板<textarea id="apiBodyTemplate" class="code-textarea"></textarea></label>
+            <label class="full">响应文本路径<input id="apiResponsePath" type="text" placeholder="choices.0.message.content" /></label>
+          </div>
+          <div class="asset-row">
+            <button id="newApiProfileBtn">新增接口</button>
+            <button id="deleteApiProfileBtn">删除接口</button>
+            <button id="testApiBtn">测试接口</button>
+            <button class="primary" id="saveApiBtn">保存接口设置</button>
+          </div>
+          <p class="hint">浏览器直连可能被 CORS 拦截；安卓 WebView 版内置 NativeBridge 网络请求，桌面端可使用 server/qt-proxy.mjs 代理。</p>
+        </section>
+
+        <section>
+          <h3>聊天参数</h3>
+          <div class="form-grid compact">
+            <label>你的称呼<input id="userName" type="text" placeholder="User" /></label>
+            <label>上下文消息数<input id="contextLimit" type="number" min="4" max="80" step="2" /></label>
+            <label class="full">全局系统提示<textarea id="globalSystemPrompt"></textarea></label>
+          </div>
+          <div class="asset-row">
+            <button class="primary" id="saveGeneralSettingsBtn">保存聊天设置</button>
+            <button id="exportAllBtn">导出全部数据</button>
+            <button id="importAllBtn">导入备份</button>
+            <input id="importAllInput" type="file" hidden accept="application/json,.json" />
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="manualImportModal" hidden>
+    <div class="modal-card wide">
+      <div class="modal-header">
+        <div>
+          <h2>未知角色卡格式</h2>
+          <p>系统无法自动识别全部字段，你可以在这里手动映射后导入。</p>
+        </div>
+        <button class="icon-button" data-close-modal="manualImportModal">×</button>
+      </div>
+      <div class="form-grid">
+        <label>角色名<input id="manualName" type="text" /></label>
+        <label class="full">描述<textarea id="manualDescription"></textarea></label>
+        <label class="full">原始内容<textarea id="manualRaw" class="code-textarea" readonly></textarea></label>
+      </div>
+      <div class="modal-footer">
+        <button data-close-modal="manualImportModal">取消</button>
+        <button class="primary" id="saveManualImportBtn">导入为角色</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

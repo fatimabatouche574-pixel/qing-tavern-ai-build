@@ -1,0 +1,12 @@
+{
+  "name": "qing-tavern-ai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "serve": "node server/static-server.mjs",
+    "proxy": "node server/qt-proxy.mjs"
+  },
+  "description": "Local tavern-style AI roleplay chat app with custom APIs, character cards, multi-chat branches and mobile-first UI.",
+  "license": "MIT"
+}

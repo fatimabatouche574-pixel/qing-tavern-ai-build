@@ -1,0 +1,17 @@
+{
+  "name": "青樽 QingTavern AI",
+  "short_name": "青樽AI",
+  "description": "本地角色酒馆 AI 聊天软件，支持自定义 API、角色卡导入、多会话和分支剧情。",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3fbf7",
+  "theme_color": "#65bfa7",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
