@@ -1,0 +1,33 @@
+name: Unzip ZIP
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Unzip qing-tavern-ai.zip
+        run: |
+          rm -rf qing-tavern-ai
+          mkdir qing-tavern-ai
+          unzip -q qing-tavern-ai.zip -d qing-tavern-ai
+
+          echo "解压后的文件："
+          find qing-tavern-ai -maxdepth 3 -type f | head -100
+
+      - name: Commit unzipped files
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add qing-tavern-ai
+          git commit -m "Unzip qing-tavern-ai.zip" || echo "No changes to commit"
+          git push
